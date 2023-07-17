@@ -6,6 +6,7 @@ class Lexer:
     # create tokens:
     def __init__(self) -> None:
         self.ints = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        self.chars = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
         self.num_ops = ["+", "-", "*", "/", "%"]
         self.comp_ops = [">", "<", "==", "!=", ">=", "<="]
         self.bool_ops = ["&&", "||", "!"]
@@ -16,7 +17,8 @@ class Lexer:
         self.function_names = ["print:"]
         self.call_stack = deque()
         self.variables = {}
-    
+        self.variable_names = []
+        
     def lex(self, input: str, parameters: bool = False):
         input = input.replace(" ", "")
         
@@ -138,7 +140,8 @@ class Lexer:
             if len(input) == 0:
                 break
             
-            curr_call += c
+            if c in self.chars:
+                curr_call += c
             
             if next_is_var:
                 try:
@@ -150,6 +153,7 @@ class Lexer:
                     if input[curr_index:input.index(":") + 1] in self.function_names:
                         function_call = (input[curr_index:input.index(":")], self.lex(input[input.index(":") + 1: input.index(";")], True))
                         self.variables[curr_var] = function_call
+                        self.variable_names.append(curr_var)
                         token_list.append(function_call)
                         input = input[input.index(";") + 1: len(input)]
                         token_list += self.lex(input)
@@ -172,17 +176,26 @@ class Lexer:
                     
                     if next_is_var:
                         self.variables[curr_var] = my_num
+                        self.variable_names.append(curr_var)
                         token_list.append((curr_var, my_num))
                         curr_num = ""
                     
                     else:
                         token_list.append((type, my_num))
+                        
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
                     
                 token_list += self.lex(input[curr_index + 1: len(input)])
                 return token_list
             
             if c == "=":
                 if input[curr_index + 1] == "=":
+                    
+                    if curr_call in self.variable_names:
+                        token_list.append((curr_call, self.variables[curr_call]))
+                        curr_call = ""
+                    
                     if curr_num != "":
                         type = ""
                         try:
@@ -197,6 +210,7 @@ class Lexer:
                 
                         if next_is_var:
                             self.variables[curr_var] = my_num
+                            self.variable_names.append(curr_var)
                             token_list.append((curr_var, my_num))
                             curr_num = ""
                 
@@ -229,6 +243,7 @@ class Lexer:
             if curr_bool == "true" and ((curr_index - start_index) == 3):
                 if next_is_var:
                     self.variables[curr_var] = True
+                    self.variable_names.append(curr_var)
                     token_list.append((curr_var, True))
                     
                 else:
@@ -239,6 +254,7 @@ class Lexer:
             if curr_bool == "false" and ((curr_index - start_index) == 4):
                 if next_is_var:
                     self.variables[curr_var] = False
+                    self.variable_names.append(curr_var)
                     token_list.append((curr_var, False))
                 
                 else:
@@ -263,6 +279,7 @@ class Lexer:
                 
                 if next_is_var:
                     self.variables[curr_var] = my_num
+                    self.variable_names.append(curr_var)
                     token_list.append((curr_var, my_num))
                     curr_num = ""
                 
@@ -271,10 +288,20 @@ class Lexer:
                     curr_num = ""
                 
             if c in self.num_ops:
+                
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
+                    curr_call = ""
+                
                 token_list.append(("num_op", c))
                 
                 
             if c in self.comp_ops:
+                
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
+                    curr_call = ""
+                
                 if str(c) + str(input[curr_index + 1]) in self.comp_ops:
                     token_list.append(("comp_op", str(c) + str(input[curr_index + 1])))
                 
@@ -282,13 +309,28 @@ class Lexer:
                     token_list.append(("comp_op", c))
                     
             if curr_index < len(input) - 1 and c == "!" and input[curr_index + 1] == "=":
+                
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
+                    curr_call = ""
+                
                 token_list.append(("comp_op", "!="))
                     
             if curr_index < len(input) - 1 and c in self.bool_ops and (str(c) + str(input[curr_index + 1])) not in self.comp_ops:
+                
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
+                    curr_call = ""
+                
                 token_list.append(("bool_op", c))
             
             if curr_index < len(input) - 1 and (str(c) + str(input[curr_index + 1])) in self.bool_ops:
-                    token_list.append(("bool_op", str(c) + str(input[curr_index + 1])))
+                    
+                if curr_call in self.variable_names:
+                    token_list.append((curr_call, self.variables[curr_call]))
+                    curr_call = ""                    
+                    
+                token_list.append(("bool_op", str(c) + str(input[curr_index + 1])))
                 
             curr_index += 1
         
@@ -308,9 +350,14 @@ class Lexer:
             if next_is_var:
                 token_list.append((curr_var, my_num))
                 self.variables[curr_var] = my_num
+                self.variable_names.append(curr_var)
                     
             else:
                 token_list.append((type, my_num))
+        
+        if curr_call in self.variable_names:
+            token_list.append((curr_call, self.variables[curr_call]))
+            curr_call = ""
         
         return token_list                               
     
