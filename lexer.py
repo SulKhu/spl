@@ -14,14 +14,12 @@ class Lexer:
         self.false = ["f", "a", "l", "s", "e"]
         self.functions = {}
         self.functions["print:"] = ["string"]
-        self.function_names = ["print:"]
+        self.function_names = ["print"]
         self.call_stack = deque()
         self.variables = {}
         self.variable_names = []
         
     def lex(self, input: str, parameters: bool = False):
-        input = input.replace(" ", "")
-        
         if parameters:
             
             params = []
@@ -60,7 +58,6 @@ class Lexer:
                 curr_index += 1
             
             curr_index += 1
-            function_name += ":"
             function_name = function_name.replace(" ", "")
             self.functions[function_name] = self.lex(input[curr_index: input.index("{")], True)
             self.function_names.append(function_name)
@@ -221,14 +218,25 @@ class Lexer:
                     token_list.append(("bool_op", "=="))
                 
                 elif input[curr_index - 1] not in self.bool_ops and input[curr_index - 1] not in self.comp_ops and input[curr_index - 1] != "=":
-                    curr_var = input[0: curr_index].replace(" ", "")
-                    next_is_var = True
+                    curr_var = input[0: curr_index]
+                    self.variable_names.append(curr_var)
+                    var = self.lex(input[curr_index + 1: input.index(";") + 1])
+                    self.variables[curr_var] = var
+                    token_list.append((curr_var, var))
+                    input = input[input.index(";") + 1: len(input)]
+                    token_list += self.lex(input)
+                    
+                    return token_list
+                    curr_index = 0
                     curr_bool = ""
                     curr_call = ""
             
             if curr_call in self.function_names:
-                token_list.append((curr_call, self.lex(input[curr_index + 1: input.index(";")], True)))
+                token_list.append((curr_call, self.lex(input[curr_index + 2: input.index(";")], True)))
+                input = input[input.index(";"): len(input)]
+                token_list += self.lex(input)
                 self.call_stack.append(curr_call)
+                return token_list
             
             if c in self.true:
                 if curr_bool == "":

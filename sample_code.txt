@@ -1,5 +1,5 @@
 5 + 5;
-x = true;
+x = 9;
 z = 11;
 
 create sort: my_list, priority{

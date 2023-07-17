@@ -6,6 +6,8 @@ with open('sample_code.txt', 'r') as file:
 print(code)
 print("----------")
 
+code = code.replace(" ", "")
+
 my_lexer = Lexer()
 tokens = my_lexer.lex(code)
 
