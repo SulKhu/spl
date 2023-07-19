@@ -1,0 +1,25 @@
+5 + 5;
+x = 9;
+z = 11;
+
+create sort: my_list, priority{
+    my_list = false;
+    priority = 10.0;
+
+    if true {
+        my_list = true;
+        priority = 9.9;
+    }
+
+    repeat: x == 9 {
+        10 + 10;
+    }
+}
+
+print: x;
+y = sort: list_2, 6;
+9 + 9 >= 17.9;
+
+q = z + 11;
+
+true == false;
