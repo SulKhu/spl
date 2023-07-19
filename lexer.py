@@ -21,13 +21,14 @@ class Lexer:
         
     def lex(self, input: str, parameters: bool = False):
         if parameters:
-            
             params = []
             
             curr_param = ""
             for c in input:
                 if c == "," or c == ";":
-                    params.append(curr_param.replace(" ", ""))
+                    params.append(curr_param)
+                    self.variables[curr_param] = None
+                    self.variable_names.append(curr_param)
                     curr_param = ""
                 
                 else:   
@@ -78,7 +79,7 @@ class Lexer:
                     
                 curr_index += 1
             
-            token_list += self.lex(input[temp_index: curr_index - 1])
+            token_list.append((function_name, self.lex(input[temp_index: curr_index - 1])))
             input = input[curr_index: len(input)]
             token_list += self.lex(input)
             return token_list
