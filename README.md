@@ -1,3 +1,3 @@
-# simple
-# programming
-# language
+- simple
+- programming
+- language
