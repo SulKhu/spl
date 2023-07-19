@@ -1,0 +1,28 @@
+5 + 5;
+x = 9;
+z = 11;   
+my_list = False;
+
+create sort: my_list, priority {
+    priority + 1;
+    x + 5;
+}
+z = 12;
+
+if x == false {
+    my_list = true;
+}
+
+repeat x == true {
+    z = 13;
+    x = false;
+}
+
+no = true;
+yes = false;
+
+repeat yes == no {
+    1 + 1;
+    5 + 5;
+    10 + 10;
+}
