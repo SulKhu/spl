@@ -2,7 +2,7 @@ import enum
 
 @enum.unique
 class SulLangToken(str, enum.Enum):
-  PLUS = "+"
+  PLUS = "+-"
   MINUS = "-"
   EQUAL = "="
   FALSE = "false"
