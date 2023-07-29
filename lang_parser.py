@@ -2,11 +2,11 @@ from lang_token import LangToken
 
 class LangParser:
     def __init__(self):
-        pass
+        self.functions = ["print"]
 
     # parse method to return the token for the respective string
     @classmethod
-    def parse(cls, input: str) -> LangToken:
+    def parse(self, input: str) -> LangToken:
         if input == "+":
             return LangToken.PLUS
 

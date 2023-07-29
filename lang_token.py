@@ -1,6 +1,5 @@
 import enum
 
-
 @enum.unique
 class LangToken(str, enum.Enum):
     PLUS = "+"

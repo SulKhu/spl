@@ -1,13 +1,13 @@
 from collections import deque
 from lang_parser import LangParser
 
+
 class Lexer:
     def __init__(self):
         self.curr_final_curly_index = None
-        self.my_functions = ["log"]
+        self.my_parser = LangParser()
 
     # lex method to split string into tokens
-    @classmethod
     def lex(self, input: str):
         length = len(input)
         tokens = []
@@ -25,7 +25,7 @@ class Lexer:
         if function_index != None:
             tokens += self.lex(input[0:function_index])
             name = Lexer.get_method_name(input[function_index + 6 : length])
-            #self.my_functions.append(name)
+            self.my_parser.functions.append(name)
             tokens.append(
                 (
                     name,
@@ -34,7 +34,7 @@ class Lexer:
                 )
             )
             tokens += self.lex(
-                input[function_index + self.curr_curly_brace_index: length]
+                input[function_index + self.curr_curly_brace_index : length]
             )
             return tokens
 
@@ -49,7 +49,7 @@ class Lexer:
             loop_index = input.index("repeat")
         except:
             loop_index = -1
-            
+
         next_index = None
         conditional_or_loop = None
         if if_index != -1 and loop_index != -1:
@@ -80,7 +80,7 @@ class Lexer:
                     )
                 )
                 tokens += self.lex(
-                    input[next_index + self.curr_curly_brace_index: length]
+                    input[next_index + self.curr_curly_brace_index : length]
                 )
                 return tokens
 
@@ -105,7 +105,24 @@ class Lexer:
 
             # parse those tokens into our token list
             for param in params:
-                token_group.append(LangParser.parse(param))
+                try:
+                    function_index = param.index("(")
+                except:
+                    function_index = None
+
+                if function_index != None:
+                    token_group.append(
+                        (
+                            "function_call",
+                            self.my_parser.parse(param[0:function_index]),
+                            self.get_params(
+                                param[function_index + 1 : len(param) - 1], True
+                            ),
+                        )
+                    )
+
+                else:
+                    token_group.append(self.my_parser.parse(param))
 
             # if the token group is not empty, do not add list to tokens
             if len(token_group) != 0:
@@ -122,7 +139,10 @@ class Lexer:
 
     # static method that will get the parameters of a method
     @staticmethod
-    def get_params(input: str) -> list[str]:
+    def get_params(input: str, is_call=False) -> list[str]:
+        if is_call:
+            return input.split(",")
+
         return input[input.index(":") + 1 : input.index("{")].split(",")
 
     # instance method that will find the code that lies within certain curly braces
@@ -136,6 +156,13 @@ class Lexer:
 
         # using a stack, find the curly braces that align with the first ones
         while len(get_braces) != 0:
+            # check to make sure we don't run into an out of bounds error
+            # if we never have the same amount of open and close curly braces, we know one is missing
+            # return syntax error
+            if index >= len(input):
+                print("Syntax Error: Missing '}'")
+                exit()
+
             if input[index] == "{":
                 get_braces.append("{")
             if input[index] == "}":
@@ -151,4 +178,3 @@ class Lexer:
     @classmethod
     def get_check(self, input: str) -> str:
         return input[0 : input.index("{")]
-
